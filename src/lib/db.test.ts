@@ -20,7 +20,10 @@ describe('Database Functional Tests', () => {
     }
   });
 
-  it('should successfully write and read a room document from Firestore', async () => {
+  // Skip this test in CI or if GCP credentials aren't provided
+  const shouldSkip = process.env.CI || !process.env.GCP_PROJECT_ID;
+
+  it.skipIf(shouldSkip)('should successfully write and read a room document from Firestore', async () => {
     const roomRef = firestore.collection('rooms').doc(testRoomId);
     
     // Write

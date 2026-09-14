@@ -7,6 +7,20 @@ export default function TestStravaPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchActivities = async (token: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/strava/activities?token=${token}`);
+      if (!res.ok) throw new Error('Failed to fetch activities');
+      const data = await res.json();
+      setActivities(data.activities || []);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Check if we have an access token in the URL hash
     const hash = window.location.hash;
@@ -23,23 +37,10 @@ export default function TestStravaPage() {
     const searchParams = new URLSearchParams(window.location.search);
     const errParam = searchParams.get('error');
     if (errParam) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError(`Authentication failed: ${errParam}`);
     }
   }, []);
-
-  const fetchActivities = async (token: string) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/strava/activities?token=${token}`);
-      if (!res.ok) throw new Error('Failed to fetch activities');
-      const data = await res.json();
-      setActivities(data.activities || []);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
