@@ -7,9 +7,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'STRAVA_CLIENT_ID is not set' }, { status: 500 });
   }
 
-  // Use the current host to determine the redirect URI dynamically
+  // Use headers to handle Cloud Run's proxy correctly (TLS termination)
   const url = new URL(request.url);
-  const redirectUri = `${url.protocol}//${url.host}/api/strava/callback`;
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || url.host;
+  let protocol = request.headers.get('x-forwarded-proto') || url.protocol.replace(':', '');
+  if (protocol.includes(',')) protocol = protocol.split(',')[0]; // e.g. "https,http"
+  
+  const redirectUri = `${protocol}://${host}/api/strava/callback`;
 
   const scope = 'activity:read_all';
   const stravaLoginUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=${scope}`;
