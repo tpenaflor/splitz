@@ -10,6 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^9.1.0",
+    "@google-cloud/storage": "^8.1.0",
     "clsx": "^2.1.1",
     "fit-file-parser": "^5.0.2",
     "gpxparser": "^3.0.8",

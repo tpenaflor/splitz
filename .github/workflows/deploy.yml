@@ -51,3 +51,8 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.IMAGE }}:${{ github.sha }}
           flags: '--allow-unauthenticated'
+          env_vars: |
+            GCP_PROJECT_ID=${{ env.PROJECT_ID }}
+            FIT_FILES_BUCKET=splitz-multiplayer-files-508621
+            STRAVA_CLIENT_ID=${{ secrets.STRAVA_CLIENT_ID }}
+            STRAVA_CLIENT_SECRET=${{ secrets.STRAVA_CLIENT_SECRET }}
