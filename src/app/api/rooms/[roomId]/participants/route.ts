@@ -4,10 +4,8 @@ import { firestore, storage } from '@/lib/db';
 // Fallback to the known bucket name if env var is missing during local dev
 const BUCKET_NAME = process.env.FIT_FILES_BUCKET || 'splitz-multiplayer-files-508621';
 
-export async function POST(request: Request, { params }: { params: { roomId: string } }) {
-  // In Next.js 14/15 App Router, `params` should be awaited or accessed carefully depending on version.
-  // Next.js 15 requires awaiting params, but we're on 14. Let's just use it directly.
-  const { roomId } = params;
+export async function POST(request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+  const { roomId } = await params;
   
   try {
     const body = await request.json();
@@ -46,8 +44,8 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   }
 }
 
-export async function GET(request: Request, { params }: { params: { roomId: string } }) {
-  const { roomId } = params;
+export async function GET(request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+  const { roomId } = await params;
   
   try {
     const snapshot = await firestore.collection('rooms').doc(roomId).collection('participants').get();

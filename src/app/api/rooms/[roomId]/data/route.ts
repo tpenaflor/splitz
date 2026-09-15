@@ -3,8 +3,8 @@ import { storage } from '@/lib/db';
 
 const BUCKET_NAME = process.env.FIT_FILES_BUCKET || 'splitz-multiplayer-files-508621';
 
-export async function GET(request: Request, { params }: { params: { roomId: string } }) {
-  const { roomId } = params;
+export async function GET(request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+  const { roomId } = await params;
   const url = new URL(request.url);
   const participantId = url.searchParams.get('participantId');
 
