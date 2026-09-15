@@ -21,6 +21,7 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
   const [uploadingActivity, setUploadingActivity] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const fetchingRefs = useRef<Set<string>>(new Set());
 
   const [pendingActivityData, setPendingActivityData] = useState<any | null>(null);
   const [renameInput, setRenameInput] = useState('');
@@ -45,16 +46,20 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
   useEffect(() => {
     participants.forEach(async (p) => {
       const pId = p.id.toString();
-      if (!activities.find(a => a.id.toString() === pId)) {
+      if (!activities.find(a => a.id.toString() === pId) && !fetchingRefs.current.has(pId)) {
+        fetchingRefs.current.add(pId);
         try {
           const res = await fetch(p.dataUrl);
           if (res.ok) {
             const activityData = await res.json();
             activityData.id = activityData.id.toString();
             addActivity(activityData);
+          } else {
+            fetchingRefs.current.delete(pId);
           }
         } catch (e) {
           console.error("Failed to load participant data", e);
+          fetchingRefs.current.delete(pId);
         }
       }
     });

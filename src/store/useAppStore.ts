@@ -77,6 +77,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   segmentRange: null,
 
   addActivity: (activity) => set((state) => {
+    if (state.activities.some(a => a.id === activity.id)) return state;
+
     const colors = ['#9333ea', '#db2777', '#0284c7', '#16a34a', '#ea580c', '#eab308'];
     const usedColors = state.activities.map(a => a.color);
     const availableColors = colors.filter(c => !usedColors.includes(c));
