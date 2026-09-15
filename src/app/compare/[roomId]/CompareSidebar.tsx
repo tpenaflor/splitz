@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Users, Link as LinkIcon, Activity as ActivityIcon, Loader2, X, CheckCircle2, Trash2 } from 'lucide-react';
 import Uploader from '@/components/Uploader';
