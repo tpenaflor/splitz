@@ -35,7 +35,7 @@ export default function Timeline() {
       if (store.isPlaying && store.currentTime !== null && store.maxTime !== null && store.minTime !== null) {
         const newTime = store.currentTime + (deltaSec * store.playbackSpeed);
         if (newTime >= store.maxTime) {
-          store.setCurrentTime(store.minTime);
+          store.setCurrentTime(store.maxTime);
           store.setIsPlaying(false);
         } else {
           store.setCurrentTime(newTime);
@@ -76,6 +76,8 @@ export default function Timeline() {
             max={maxTime} 
             value={currentTime} 
             onChange={(e) => setCurrentTime(parseFloat(e.target.value))}
+            onMouseDown={() => setIsPlaying(false)}
+            onTouchStart={() => setIsPlaying(false)}
             className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
           />
           <span className="text-gray-400 text-xs md:text-sm font-mono">{formatTime(maxTime, appMode)}</span>
