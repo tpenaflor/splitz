@@ -28,8 +28,8 @@ export default function TelemetryChart() {
       const maxTime = Math.max(...activities.map(a => a.endTime));
       timeScale = maxTime - minTime;
     } else {
-      if (!activeSegmentId) return [];
-      timeScale = Math.max(...segmentResults.map(r => r.duration));
+      if (!activeSegmentId && segmentResults.length === 0) return [];
+      timeScale = segmentResults.length > 0 ? Math.max(...segmentResults.map(r => r.duration)) : 0;
     }
 
     if (timeScale <= 0) return [];

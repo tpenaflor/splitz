@@ -2,8 +2,14 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { Users, Link as LinkIcon, Activity as ActivityIcon, Loader2, X, CheckCircle2, Trash2, Info } from 'lucide-react';
+import { Users, Link as LinkIcon, Activity as ActivityIcon, Loader2, X, CheckCircle2, Trash2, Info, Route } from 'lucide-react';
 import Uploader from '@/components/Uploader';
+
+function formatDuration(sec: number) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
 
 type CompareSidebarProps = {
   roomId: string;
@@ -12,7 +18,7 @@ type CompareSidebarProps = {
 };
 
 export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSidebarProps) {
-  const { activities, addActivity, removeActivity } = useAppStore();
+  const { activities, addActivity, removeActivity, detectedSegments, activeSegmentId, setActiveSegment, segmentRange, setSegmentRange, deleteSegment, segmentResults } = useAppStore();
   const [participants, setParticipants] = useState<any[]>([]);
   const [roomMode, setRoomMode] = useState<string>('event');
   const [shareLink, setShareLink] = useState('');
@@ -36,7 +42,10 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
         if (!res.ok) return;
         const data = await res.json();
         setParticipants(data.participants || []);
-        if (data.mode) setRoomMode(data.mode);
+        if (data.mode) {
+          setRoomMode(data.mode);
+          useAppStore.getState().setAppMode(data.mode);
+        }
       } catch (e) {}
     };
 
@@ -343,6 +352,108 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
             );
           })}
         </div>
+        </div>
+
+        <div className="border-t border-gray-200 dark:border-gray-800 my-4" />
+
+        <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Detected Shared Routes</h2>
+        {detectedSegments.length === 0 ? (
+          <div className="text-gray-500 text-sm">Upload at least two overlapping routes to detect segments.</div>
+        ) : (
+          detectedSegments.map((seg, idx) => (
+            <div key={seg.id} className={`bg-white dark:bg-gray-800 rounded-lg p-4 border transition-colors ${activeSegmentId === seg.id ? 'border-purple-500' : 'border-gray-200 dark:border-gray-700 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 shadow-sm'}`}>
+              {activeSegmentId !== seg.id ? (
+                <div onClick={() => setActiveSegment(seg.id)} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-2">
+                    <Route className="w-4 h-4 text-purple-400" />
+                    <span className="text-gray-900 dark:text-white font-medium">{seg.name || `Segment ${idx + 1}`}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-400 text-sm">{(seg.lengthMeters / 1000).toFixed(2)} km</span>
+                    {seg.isCustom && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); deleteSegment(seg.id); }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Delete segment"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-400 hover:text-red-300" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-purple-400 font-bold">{seg.name || `Segment ${idx + 1}`} (Active)</span>
+                    <div className="flex items-center gap-2">
+                      {seg.isCustom && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); deleteSegment(seg.id); }}
+                          title="Delete segment"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-400 hover:text-red-300" />
+                        </button>
+                      )}
+                      <button onClick={() => setActiveSegment(null)}><X className="w-4 h-4 text-gray-400 hover:text-white" /></button>
+                    </div>
+                  </div>
+                  
+                  {roomMode === 'segment' && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-xs text-gray-500 dark:text-gray-400">Trim Segment Start / End</label>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs text-gray-500 w-8">Start</span>
+                        <input 
+                          type="range" 
+                          min={0} 
+                          max={100} 
+                          value={(segmentRange?.[0] ?? 0)}
+                          onChange={(e) => setSegmentRange([Number(e.target.value), (segmentRange?.[1] ?? 100)])}
+                          className="flex-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-lg appearance-none accent-purple-500"
+                        />
+                        <span className="text-xs text-gray-500 w-8 text-right">{(segmentRange?.[0] ?? 0)}%</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500 w-8">End</span>
+                        <input 
+                          type="range" 
+                          min={0} 
+                          max={100} 
+                          value={(segmentRange?.[1] ?? 100)}
+                          onChange={(e) => setSegmentRange([(segmentRange?.[0] ?? 0), Number(e.target.value)])}
+                          className="flex-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-lg appearance-none accent-purple-500"
+                        />
+                        <span className="text-xs text-gray-500 w-8 text-right">{(segmentRange?.[1] ?? 100)}%</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                    <h4 className="text-xs text-gray-500 dark:text-gray-400 uppercase">Leaderboard</h4>
+                    {segmentResults
+                      .sort((a, b) => a.duration - b.duration)
+                      .map((res, i) => {
+                        const act = activities.find(a => a.id === res.activityId);
+                        if (!act) return null;
+                        return (
+                          <div key={res.activityId} className="flex justify-between items-center text-sm p-2 bg-gray-100 dark:bg-gray-900 rounded border-l-2" style={{ borderColor: act.color }}>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-500 w-4">{i + 1}.</span>
+                              <span className="text-gray-700 dark:text-gray-200 truncate max-w-[120px]">{act.name}</span>
+                            </div>
+                            <span className="font-mono font-bold text-purple-400">{formatDuration(res.duration)}</span>
+                          </div>
+                        );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

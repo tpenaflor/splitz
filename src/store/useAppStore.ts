@@ -86,11 +86,30 @@ export const useAppStore = create<AppState>((set, get) => ({
     
     const newActivity = { ...activity, color: assignedColor };
     const newActivities = [...state.activities, newActivity];
-    const allStartTimes = newActivities.map(a => a.startTime);
-    const allEndTimes = newActivities.map(a => a.endTime);
     const newDetectedSegments = detectCommonSegments(newActivities);
-    const { minTime, maxTime } = computeEventBounds(newActivities, newDetectedSegments, state.privacyMode);
+    
+    if (state.appMode === 'segment' && !state.activeSegmentId) {
+      const results = newActivities.map(a => ({
+        activityId: a.id,
+        startTime: a.startTime,
+        endTime: a.endTime,
+        duration: a.endTime - a.startTime
+      }));
+      const maxDuration = results.length > 0 ? Math.max(...results.map(r => r.duration)) : 0;
+      
+      return {
+        activities: newActivities,
+        minTime: 0,
+        maxTime: maxDuration,
+        currentTime: 0,
+        detectedSegments: newDetectedSegments,
+        segmentResults: results,
+        baseSegmentResults: results,
+        segmentRange: newActivities.length > 0 ? [0, newActivities[0].positions.length - 1] : null
+      };
+    }
 
+    const { minTime, maxTime } = computeEventBounds(newActivities, newDetectedSegments, state.privacyMode);
     return {
       activities: newActivities,
       minTime,
@@ -105,11 +124,29 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (newActivities.length === 0) {
       return { activities: [], minTime: null, maxTime: null, currentTime: null, isPlaying: false, detectedSegments: [], activeSegmentId: null, segmentResults: [], baseSegmentResults: [] };
     }
-    const allStartTimes = newActivities.map(a => a.startTime);
-    const allEndTimes = newActivities.map(a => a.endTime);
     const newDetectedSegments = detectCommonSegments(newActivities);
-    const { minTime, maxTime } = computeEventBounds(newActivities, newDetectedSegments, state.privacyMode);
+    
+    if (state.appMode === 'segment' && !state.activeSegmentId) {
+      const results = newActivities.map(a => ({
+        activityId: a.id,
+        startTime: a.startTime,
+        endTime: a.endTime,
+        duration: a.endTime - a.startTime
+      }));
+      const maxDuration = Math.max(...results.map(r => r.duration));
+      return {
+        activities: newActivities,
+        minTime: 0,
+        maxTime: maxDuration,
+        currentTime: 0,
+        detectedSegments: newDetectedSegments,
+        segmentResults: results,
+        baseSegmentResults: results,
+        segmentRange: newActivities.length > 0 ? [0, newActivities[0].positions.length - 1] : null
+      };
+    }
 
+    const { minTime, maxTime } = computeEventBounds(newActivities, newDetectedSegments, state.privacyMode);
     return {
       activities: newActivities,
       minTime,
@@ -128,24 +165,62 @@ export const useAppStore = create<AppState>((set, get) => ({
   setAppMode: (mode) => set((state) => {
     if (mode === 'event') {
       const { minTime, maxTime } = computeEventBounds(state.activities, state.detectedSegments, state.privacyMode);
-      return { appMode: mode, minTime, maxTime, currentTime: minTime, activeSegmentId: null };
+      return { appMode: mode, minTime, maxTime, currentTime: minTime, activeSegmentId: null, segmentResults: [], baseSegmentResults: [], segmentRange: null };
+    } else if (mode === 'segment') {
+      const results = state.activities.map(a => ({
+        activityId: a.id,
+        startTime: a.startTime,
+        endTime: a.endTime,
+        duration: a.endTime - a.startTime
+      }));
+      const maxDuration = results.length > 0 ? Math.max(...results.map(r => r.duration)) : 0;
+      return { 
+        appMode: mode, 
+        minTime: 0, 
+        maxTime: maxDuration, 
+        currentTime: 0, 
+        activeSegmentId: null,
+        segmentResults: results,
+        baseSegmentResults: results,
+        segmentRange: state.activities.length > 0 ? [0, state.activities[0].positions.length - 1] : null
+      };
     }
     return { appMode: mode };
   }),
 
   setActiveSegment: (id) => set((state) => {
     if (!id) {
-      const { minTime, maxTime } = computeEventBounds(state.activities, state.detectedSegments, state.privacyMode);
-      return { 
-        activeSegmentId: null, 
-        segmentResults: [], 
-        baseSegmentResults: [], 
-        segmentRange: null, 
-        minTime, 
-        maxTime, 
-        currentTime: minTime, 
-        isPlaying: false 
-      };
+      if (state.appMode === 'segment') {
+        const results = state.activities.map(a => ({
+          activityId: a.id,
+          startTime: a.startTime,
+          endTime: a.endTime,
+          duration: a.endTime - a.startTime
+        }));
+        const maxDuration = results.length > 0 ? Math.max(...results.map(r => r.duration)) : 0;
+        return { 
+          activeSegmentId: null, 
+          segmentResults: results, 
+          baseSegmentResults: results, 
+          segmentRange: state.activities.length > 0 ? [0, state.activities[0].positions.length - 1] : null, 
+          minTime: 0, 
+          maxTime: maxDuration, 
+          currentTime: 0, 
+          isPlaying: false 
+        };
+      } else {
+        const { minTime, maxTime } = computeEventBounds(state.activities, state.detectedSegments, state.privacyMode);
+        return { 
+          activeSegmentId: null, 
+          segmentResults: [], 
+          baseSegmentResults: [], 
+          segmentRange: null, 
+          minTime, 
+          maxTime, 
+          currentTime: minTime, 
+          isPlaying: false 
+        };
+      }
     }
     const seg = state.detectedSegments.find(s => s.id === id);
     if (!seg) return {};

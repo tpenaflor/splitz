@@ -92,7 +92,7 @@ export default function MapComponent() {
         end: endPos
       };
     } else {
-      if (!activeSegmentId || !segmentRange || activities.length === 0) return null;
+      if (!segmentRange || activities.length === 0) return null;
       const ref = activities[0];
       return {
         start: ref.positions[segmentRange[0]],
@@ -107,7 +107,7 @@ export default function MapComponent() {
     return activities.map(activity => {
       let timeToInterpolate = currentTime;
 
-      if (appMode === 'segment' && activeSegmentId) {
+      if (appMode === 'segment') {
         const result = segmentResults.find(r => r.activityId === activity.id);
         if (!result) return { ...activity, currentPos: null };
         
@@ -128,7 +128,23 @@ export default function MapComponent() {
 
 
   const baseSegmentPaths = useMemo(() => {
-    if (appMode !== 'segment' || !activeSegmentId) return [];
+    if (appMode !== 'segment') return [];
+    if (!activeSegmentId) {
+      if (activities.length === 0) return [];
+      const ref = activities[0];
+      return [{
+        id: 'base-segment-outline',
+        color: '#9CA3AF',
+        geojson: {
+          type: 'Feature' as const,
+          properties: {},
+          geometry: {
+            type: 'LineString' as const,
+            coordinates: ref.positions.map(p => [p.lon, p.lat])
+          }
+        }
+      }];
+    }
     const baseSeg = detectedSegments.find(s => s.id === activeSegmentId);
     if (!baseSeg || activities.length === 0) return [];
     
@@ -151,7 +167,7 @@ export default function MapComponent() {
 
   const activeSegmentPaths = useMemo(() => {
 
-    if (appMode !== 'segment' || !activeSegmentId || segmentResults.length === 0) return [];
+    if (appMode !== 'segment' || segmentResults.length === 0) return [];
     return segmentResults.map(res => {
       const act = activities.find(a => a.id === res.activityId);
       if (!act) return null;
