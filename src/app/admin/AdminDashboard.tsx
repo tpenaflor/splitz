@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Loader2, Trash2, ChevronDown, ChevronRight, Activity, Calendar } from 'lucide-react';
+import { Loader2, Trash2, ChevronDown, ChevronRight, Activity, Calendar, Info } from 'lucide-react';
 
 type Participant = {
   id: string;
@@ -12,6 +12,7 @@ type Participant = {
 type Room = {
   id: string;
   createdAt: string;
+  mode: 'event' | 'segment';
   participants: Participant[];
 };
 
@@ -113,6 +114,14 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(room.createdAt).toLocaleString()}</span>
                         <span className="flex items-center gap-1"><Activity className="w-3 h-3" /> {room.participants.length} activities</span>
+                        <span className="flex items-center gap-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded uppercase font-bold text-[10px] relative group cursor-help">
+                          {room.mode}
+                          <Info className="w-3 h-3 ml-1 opacity-70" />
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-gray-900 text-white text-[11px] p-2 rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 font-normal normal-case text-center">
+                            {room.mode === 'event' ? 'Event mode: Activities must overlap in both space and time.' : 'Segment mode: Activities must overlap in space only.'}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                          </div>
+                        </span>
                       </div>
                     </div>
                   </div>

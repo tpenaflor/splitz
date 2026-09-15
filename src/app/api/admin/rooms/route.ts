@@ -17,6 +17,7 @@ export async function GET() {
       return {
         id: doc.id,
         createdAt: roomData.createdAt,
+        mode: roomData.mode || 'event',
         participants
       };
     }));

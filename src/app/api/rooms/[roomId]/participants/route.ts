@@ -92,7 +92,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ room
     }
 
     const participants = snapshot.docs.map(doc => doc.data());
-    return NextResponse.json({ participants });
+    return NextResponse.json({ participants, mode: roomDoc.data()?.mode || 'event' });
   } catch (error) {
     console.error('Failed to list participants:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

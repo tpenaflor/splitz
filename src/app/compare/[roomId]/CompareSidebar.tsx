@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { Users, Link as LinkIcon, Activity as ActivityIcon, Loader2, X, CheckCircle2, Trash2 } from 'lucide-react';
+import { Users, Link as LinkIcon, Activity as ActivityIcon, Loader2, X, CheckCircle2, Trash2, Info } from 'lucide-react';
 import Uploader from '@/components/Uploader';
 
 type CompareSidebarProps = {
@@ -14,6 +14,7 @@ type CompareSidebarProps = {
 export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSidebarProps) {
   const { activities, addActivity, removeActivity } = useAppStore();
   const [participants, setParticipants] = useState<any[]>([]);
+  const [roomMode, setRoomMode] = useState<string>('event');
   const [shareLink, setShareLink] = useState('');
   const [token, setToken] = useState<string | null>(null);
   const [stravaActivities, setStravaActivities] = useState<any[]>([]);
@@ -35,6 +36,7 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
         if (!res.ok) return;
         const data = await res.json();
         setParticipants(data.participants || []);
+        if (data.mode) setRoomMode(data.mode);
       } catch (e) {}
     };
 
@@ -169,6 +171,14 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
           <div className="flex items-center gap-2">
             <Users className="w-6 h-6 text-purple-500" />
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">Activity Group</h1>
+            <span className="flex items-center gap-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded uppercase font-bold text-[10px] relative group cursor-help ml-2">
+              {roomMode}
+              <Info className="w-3 h-3 ml-1 opacity-70" />
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-gray-900 text-white text-[11px] p-2 rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 font-normal normal-case text-center">
+                {roomMode === 'event' ? 'Event mode: Activities must overlap in both space and time.' : 'Segment mode: Activities must overlap in space only.'}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
+              </div>
+            </span>
           </div>
           <button 
             onClick={onClose}
