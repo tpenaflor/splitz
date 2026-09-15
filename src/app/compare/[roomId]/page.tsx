@@ -1,7 +1,6 @@
-import dynamic from 'next/dynamic';
+import ClientComparePage from './ClientComparePage';
 
-const ClientComparePage = dynamic(() => import('./ClientComparePage'), { ssr: false });
-
-export default function ComparePage({ params }: { params: { roomId: string } }) {
-  return <ClientComparePage roomId={params.roomId} />;
+export default async function ComparePage({ params }: { params: Promise<{ roomId: string }> }) {
+  const resolvedParams = await params;
+  return <ClientComparePage roomId={resolvedParams.roomId} />;
 }

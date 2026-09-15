@@ -56,12 +56,12 @@ export async function GET(request: Request) {
     const hashPrefix = returnToPath.includes('#') ? '&' : '#';
     const finalRedirectUrl = new URL(`${returnToPath}${hashPrefix}access_token=${data.access_token}`, baseUrl);
     
-    const response = NextResponse.redirect(finalRedirectUrl);
+    const res = NextResponse.redirect(finalRedirectUrl);
     
     // Clear the cookie
-    response.cookies.delete('strava_return_to');
+    res.cookies.delete('strava_return_to');
     
-    return response;
+    return res;
 
   } catch (err) {
     console.error('Error during Strava callback:', err);

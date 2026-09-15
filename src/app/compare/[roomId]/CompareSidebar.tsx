@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Users, Link as LinkIcon, Activity as ActivityIcon, Loader2, X, CheckCircle2 } from 'lucide-react';
-import Uploader from './Uploader';
+import Uploader from '@/components/Uploader';
 
 export default function CompareSidebar({ roomId }: { roomId: string }) {
   const { activities, addActivity, removeActivity } = useAppStore();
