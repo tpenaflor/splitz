@@ -75,6 +75,21 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'No valid GPS points found.' }, { status: 400 });
     }
 
+    let profilePic: string | undefined;
+    try {
+      const athleteRes = await fetch('https://www.strava.com/api/v3/athlete', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (athleteRes.ok) {
+        const athlete = await athleteRes.json();
+        if (athlete.profile && athlete.profile !== 'avatar/athlete/large.png') {
+          profilePic = athlete.profile;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch athlete profile', e);
+    }
+
     const activityData = {
       id: activityId,
       name,
@@ -82,6 +97,7 @@ export async function GET(request: Request) {
       positions,
       startTime: positions[0].time,
       endTime: positions[positions.length - 1].time,
+      profilePic,
     };
 
     return NextResponse.json({ activityData });

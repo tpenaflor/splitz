@@ -20,6 +20,7 @@ export type ActivityData = {
   startTime: number;
   endTime: number;
   totalDistance?: number;
+  profilePic?: string;
 };
 
 interface AppState {

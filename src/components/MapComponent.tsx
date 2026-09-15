@@ -322,11 +322,21 @@ export default function MapComponent() {
               latitude={act.currentPos.lat}
               anchor="center"
             >
-              <div 
-                className={`w-4 h-4 rounded-full border-2 border-white shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-all duration-75 z-10 relative scale-125`}
-                style={{ backgroundColor: act.color }}
-                title={act.name}
-              />
+              {act.profilePic && !act.profilePic.includes('avatar/athlete/large.png') ? (
+                <img 
+                  src={act.profilePic} 
+                  alt={act.name}
+                  className="w-8 h-8 rounded-full border-2 shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-all duration-75 z-10 relative object-cover"
+                  style={{ borderColor: act.color }}
+                  title={act.name}
+                />
+              ) : (
+                <div 
+                  className={`w-4 h-4 rounded-full border-2 border-white shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-all duration-75 z-10 relative scale-125`}
+                  style={{ backgroundColor: act.color }}
+                  title={act.name}
+                />
+              )}
             </Marker>
           );
         })}
