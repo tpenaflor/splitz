@@ -109,7 +109,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       };
     }
 
-    const { minTime, maxTime } = computeEventBounds(newActivities, newDetectedSegments, state.privacyMode);
+    const { minTime, maxTime } = computeEventBounds(newActivities);
     return {
       activities: newActivities,
       minTime,
@@ -146,7 +146,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       };
     }
 
-    const { minTime, maxTime } = computeEventBounds(newActivities, newDetectedSegments, state.privacyMode);
+    const { minTime, maxTime } = computeEventBounds(newActivities);
     return {
       activities: newActivities,
       minTime,
@@ -164,7 +164,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setPlaybackSpeed: (speed) => set({ playbackSpeed: speed }),
   setAppMode: (mode) => set((state) => {
     if (mode === 'event') {
-      const { minTime, maxTime } = computeEventBounds(state.activities, state.detectedSegments, state.privacyMode);
+      const { minTime, maxTime } = computeEventBounds(state.activities);
       return { appMode: mode, minTime, maxTime, currentTime: minTime, activeSegmentId: null, segmentResults: [], baseSegmentResults: [], segmentRange: null };
     } else if (mode === 'segment') {
       const results = state.activities.map(a => ({
@@ -209,7 +209,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           isPlaying: false 
         };
       } else {
-        const { minTime, maxTime } = computeEventBounds(state.activities, state.detectedSegments, state.privacyMode);
+        const { minTime, maxTime } = computeEventBounds(state.activities);
         return { 
           activeSegmentId: null, 
           segmentResults: [], 
@@ -309,9 +309,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     };
   }),
   setPrivacyMode: (val) => set((state) => {
-    const updates: any = { privacyMode: val };
+    const updates: Partial<AppState> = { privacyMode: val };
     if (state.appMode === 'event') {
-      const { minTime, maxTime } = computeEventBounds(state.activities, state.detectedSegments, val);
+      const { minTime, maxTime } = computeEventBounds(state.activities);
       updates.minTime = minTime;
       updates.maxTime = maxTime;
       if (state.currentTime && minTime && state.currentTime < minTime) updates.currentTime = minTime;

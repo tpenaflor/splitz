@@ -201,9 +201,7 @@ export function computeSegmentResults(
 
   return results;
 }
-const PRIVACY_BUFFER_SECONDS = 180;
-
-export function computeEventBounds(activities: ActivityData[], segments: DetectedSegment[], privacyMode: boolean) {
+export function computeEventBounds(activities: ActivityData[]) {
   if (activities.length === 0) return { minTime: null, maxTime: null };
   const allStartTimes = activities.map(a => a.startTime);
   const allEndTimes = activities.map(a => a.endTime);
