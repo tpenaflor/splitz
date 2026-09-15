@@ -168,9 +168,9 @@ export default function TelemetryChart() {
 
   return (
     <div className="h-64 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-2 flex flex-col relative z-20">
-      <div className="flex items-center justify-between mb-2 px-4">
-        <div className="flex items-center gap-4">
-          <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Telemetry</span>
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 px-2 md:px-4 gap-2">
+        <div className="flex flex-wrap items-center gap-2 md:gap-4">
+          <span className="text-xs text-gray-400 font-bold uppercase tracking-wider hidden sm:inline-block">Telemetry</span>
           <div className="flex gap-1">
             {METRICS.map(m => (
               <button
@@ -197,7 +197,7 @@ export default function TelemetryChart() {
         </div>
 
         {/* Dynamic Legend / Stats */}
-        <div className="flex gap-6">
+        <div className="flex gap-4 md:gap-6 overflow-x-auto pb-1 max-w-full hide-scrollbar">
           {activities.map(act => {
             const s = stats[act.id];
             return (

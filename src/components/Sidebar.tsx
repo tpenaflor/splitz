@@ -13,7 +13,12 @@ function formatDuration(sec: number) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export default function Sidebar() {
+type SidebarProps = {
+  isOpen?: boolean;
+  onClose?: () => void;
+};
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { 
     activities, removeActivity, currentTime, appMode, 
     detectedSegments, activeSegmentId, setActiveSegment, 
@@ -39,18 +44,26 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-96 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col h-full overflow-hidden transition-colors duration-200">
+    <div className={`fixed inset-y-0 right-0 z-50 w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col h-full overflow-hidden transition-transform duration-300 ease-in-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} md:relative md:translate-x-0 md:w-96`}>
       <div className="p-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-600 dark:from-purple-400 dark:to-pink-600">
             Splitz
           </h1>
-          <button 
-            onClick={() => setIsSettingsOpen(true)}
-            className="p-1.5 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-1.5 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={onClose}
+              className="md:hidden p-1.5 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
         
         <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-4">

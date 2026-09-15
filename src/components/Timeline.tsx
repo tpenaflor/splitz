@@ -54,8 +54,8 @@ export default function Timeline() {
   if (minTime === null || maxTime === null || currentTime === null) return null;
 
   return (
-    <div className="w-full bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 flex flex-col gap-4">
-      <div className="flex items-center gap-4">
+    <div className="w-full bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-2 md:p-4 flex flex-col gap-2 md:gap-4">
+      <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-4">
         <button 
           onClick={() => {
             if (!isPlaying && currentTime >= maxTime) {
@@ -63,13 +63,13 @@ export default function Timeline() {
             }
             setIsPlaying(!isPlaying);
           }}
-          className="p-3 rounded-full bg-purple-600 hover:bg-purple-700 text-white flex-shrink-0 transition-colors"
+          className="p-2 md:p-3 rounded-full bg-purple-600 hover:bg-purple-700 text-white flex-shrink-0 transition-colors"
         >
-          {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+          {isPlaying ? <Pause className="w-4 h-4 md:w-5 md:h-5" /> : <Play className="w-4 h-4 md:w-5 md:h-5" />}
         </button>
         
-        <div className="flex-1 flex items-center gap-4">
-          <span className="text-gray-400 text-sm font-mono">{formatTime(minTime, appMode)}</span>
+        <div className="flex-1 flex items-center gap-2 md:gap-4 min-w-[200px]">
+          <span className="text-gray-400 text-xs md:text-sm font-mono">{formatTime(minTime, appMode)}</span>
           <input 
             type="range" 
             min={minTime} 
@@ -78,13 +78,13 @@ export default function Timeline() {
             onChange={(e) => setCurrentTime(parseFloat(e.target.value))}
             className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
           />
-          <span className="text-gray-400 text-sm font-mono">{formatTime(maxTime, appMode)}</span>
+          <span className="text-gray-400 text-xs md:text-sm font-mono">{formatTime(maxTime, appMode)}</span>
         </div>
 
         <select 
           value={playbackSpeed}
           onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
-          className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded px-3 py-2 outline-none focus:border-purple-500"
+          className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm md:text-base rounded px-2 py-1 md:px-3 md:py-2 outline-none focus:border-purple-500"
         >
           <option value={1}>1x</option>
           <option value={5}>5x</option>
@@ -96,7 +96,7 @@ export default function Timeline() {
           <option value={200}>200x</option>
         </select>
       </div>
-      <div className="text-center text-purple-400 font-mono text-xl tracking-wider">
+      <div className="text-center text-purple-400 font-mono text-lg md:text-xl tracking-wider">
         {formatTime(currentTime, appMode)}
         {appMode === 'segment' && <span className="text-xs text-gray-500 ml-2">(Segment Time)</span>}
       </div>

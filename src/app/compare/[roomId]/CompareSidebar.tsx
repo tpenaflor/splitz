@@ -5,7 +5,13 @@ import { useAppStore } from '@/store/useAppStore';
 import { Users, Link as LinkIcon, Activity as ActivityIcon, Loader2, X, CheckCircle2, Trash2 } from 'lucide-react';
 import Uploader from '@/components/Uploader';
 
-export default function CompareSidebar({ roomId }: { roomId: string }) {
+type CompareSidebarProps = {
+  roomId: string;
+  isOpen?: boolean;
+  onClose?: () => void;
+};
+
+export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSidebarProps) {
   const { activities, addActivity, removeActivity } = useAppStore();
   const [participants, setParticipants] = useState<any[]>([]);
   const [shareLink, setShareLink] = useState('');
@@ -138,11 +144,19 @@ export default function CompareSidebar({ roomId }: { roomId: string }) {
   };
 
   return (
-    <div className="w-96 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col h-full overflow-hidden transition-colors duration-200">
+    <div className={`fixed inset-y-0 right-0 z-50 w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col h-full overflow-hidden transition-transform duration-300 ease-in-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} md:relative md:translate-x-0 md:w-96`}>
       <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="w-6 h-6 text-purple-500" />
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Activity Group</h1>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Users className="w-6 h-6 text-purple-500" />
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Activity Group</h1>
+          </div>
+          <button 
+            onClick={onClose}
+            className="md:hidden p-1.5 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-100 dark:border-purple-800 mb-6">
