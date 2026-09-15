@@ -33,6 +33,11 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
   const [pendingActivityData, setPendingActivityData] = useState<any | null>(null);
   const [renameInput, setRenameInput] = useState('');
 
+  const [includeHeartRate, setIncludeHeartRate] = useState(false);
+  const [includePower, setIncludePower] = useState(false);
+  const [includeCadence, setIncludeCadence] = useState(false);
+  const [includeSpeed, setIncludeSpeed] = useState(false);
+
   useEffect(() => {
     setShareLink(window.location.href);
 
@@ -133,7 +138,18 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
     if (!pendingActivityData) return;
     setUploadingActivity('confirm');
     try {
-      const dataToUpload = { ...pendingActivityData, name: renameInput || 'Unnamed Activity' };
+      const dataToUpload = { 
+        ...pendingActivityData, 
+        name: renameInput || 'Unnamed Activity',
+        positions: pendingActivityData.positions.map((p: any) => {
+          const newP = { ...p };
+          if (!includeHeartRate) delete newP.heartRate;
+          if (!includePower) delete newP.power;
+          if (!includeCadence) delete newP.cadence;
+          if (!includeSpeed) delete newP.speed;
+          return newP;
+        })
+      };
       const res = await fetch(`/api/rooms/${roomId}/participants`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -224,6 +240,29 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
               className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm mb-4 focus:ring-2 focus:ring-purple-500 outline-none"
               placeholder="Activity Name"
             />
+            
+            <div className="mb-4 space-y-2">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Share Telemetry Data (Location always included):</p>
+              <div className="flex flex-wrap gap-3">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input type="checkbox" checked={includeHeartRate} onChange={(e) => setIncludeHeartRate(e.target.checked)} className="rounded text-purple-600 focus:ring-purple-500 bg-gray-100 border-gray-300" />
+                  <span className="text-xs text-gray-700 dark:text-gray-300">Heart Rate</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input type="checkbox" checked={includePower} onChange={(e) => setIncludePower(e.target.checked)} className="rounded text-purple-600 focus:ring-purple-500 bg-gray-100 border-gray-300" />
+                  <span className="text-xs text-gray-700 dark:text-gray-300">Power</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input type="checkbox" checked={includeCadence} onChange={(e) => setIncludeCadence(e.target.checked)} className="rounded text-purple-600 focus:ring-purple-500 bg-gray-100 border-gray-300" />
+                  <span className="text-xs text-gray-700 dark:text-gray-300">Cadence</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input type="checkbox" checked={includeSpeed} onChange={(e) => setIncludeSpeed(e.target.checked)} className="rounded text-purple-600 focus:ring-purple-500 bg-gray-100 border-gray-300" />
+                  <span className="text-xs text-gray-700 dark:text-gray-300">Speed</span>
+                </label>
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <button 
                 onClick={() => setPendingActivityData(null)}
@@ -351,7 +390,6 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
               </div>
             );
           })}
-        </div>
         </div>
 
         <div className="border-t border-gray-200 dark:border-gray-800 my-4" />
