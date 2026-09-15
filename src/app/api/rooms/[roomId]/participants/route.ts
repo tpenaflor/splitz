@@ -1,16 +1,7 @@
 import { NextResponse } from 'next/server';
 import { firestore, storage } from '@/lib/db';
+import { computeBounds, validateActivity } from '@/lib/validation';
 
-function computeBounds(positions: any[]) {
-  let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
-  for (const p of positions) {
-    if (p.lat < minLat) minLat = p.lat;
-    if (p.lat > maxLat) maxLat = p.lat;
-    if (p.lon < minLon) minLon = p.lon;
-    if (p.lon > maxLon) maxLon = p.lon;
-  }
-  return { minLat, maxLat, minLon, maxLon };
-}
 
 
 // Fallback to the known bucket name if env var is missing during local dev
@@ -47,24 +38,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ roo
       await roomRef.update({ baseActivityData: bounds, baseActivityId: activityData.id });
     } else {
       const base = roomData.baseActivityData;
-      const BUFFER = 0.005; // ~500m
-
-      const intersects = (
-        minLat <= base.maxLat + BUFFER &&
-        maxLat >= base.minLat - BUFFER &&
-        minLon <= base.maxLon + BUFFER &&
-        maxLon >= base.minLon - BUFFER
-      );
-
-      if (!intersects) {
-        return NextResponse.json({ error: "Activity does not overlap spatially with the group's route." }, { status: 400 });
-      }
-
-      if (roomData.mode === 'event') {
-        const timeIntersects = Math.max(activityData.startTime, base.startTime) <= Math.min(activityData.endTime, base.endTime);
-        if (!timeIntersects) {
-          return NextResponse.json({ error: "Activity must overlap in time for Event mode." }, { status: 400 });
-        }
+      const validation = validateActivity(bounds, base, roomData.mode || 'event', 0.005);
+      
+      if (!validation.valid) {
+        return NextResponse.json({ error: validation.error }, { status: 400 });
       }
     }
 
