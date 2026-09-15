@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Loader2, Trash2, ChevronDown, ChevronRight, Activity, Calendar, Info } from 'lucide-react';
+import { Loader2, Trash2, ChevronDown, ChevronRight, Activity, Calendar, Info, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 
 type Participant = {
   id: string;
@@ -126,13 +127,24 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); deleteRoom(room.id); }}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition"
-                    title="Delete Group"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link 
+                      href={`/compare/${room.id}`}
+                      target="_blank"
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-2 text-gray-400 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition"
+                      title="Open Room"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </Link>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); deleteRoom(room.id); }}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition"
+                      title="Delete Group"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {isExpanded && (
