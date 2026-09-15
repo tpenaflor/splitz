@@ -1,9 +1,11 @@
 
 "use client";
 
-import { Upload, X, Map as MapIcon, Calendar, Activity, Play, Pause, FastForward, Trash2, Settings, Route, Shield } from 'lucide-react';
+import { Upload, X, Map as MapIcon, Calendar, Activity, Play, Pause, FastForward, Trash2, Settings, Route, Shield, Users } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import Uploader from './Uploader';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 function formatDuration(sec: number) {
   const m = Math.floor(sec / 60);
@@ -17,6 +19,24 @@ export default function Sidebar() {
     detectedSegments, activeSegmentId, setActiveSegment, 
     segmentRange, setSegmentRange, setAppMode, extractSegment, deleteSegment, setIsSettingsOpen, segmentResults
   } = useAppStore();
+
+  const router = useRouter();
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+
+  const handleCreateRoom = async () => {
+    try {
+      setIsCreatingRoom(true);
+      const res = await fetch('/api/rooms', { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to create room');
+      const data = await res.json();
+      router.push(`/compare/${data.roomId}`);
+    } catch (err) {
+      console.error(err);
+      alert('Could not create room.');
+    } finally {
+      setIsCreatingRoom(false);
+    }
+  };
 
   return (
     <div className="w-96 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col h-full overflow-hidden transition-colors duration-200">
@@ -47,6 +67,15 @@ export default function Sidebar() {
             Segments
           </button>
         </div>
+
+        <button 
+          onClick={handleCreateRoom}
+          disabled={isCreatingRoom}
+          className="w-full flex items-center justify-center gap-2 mb-4 py-2 px-4 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-medium rounded-lg shadow-sm transition-all disabled:opacity-50"
+        >
+          <Users className="w-4 h-4" />
+          {isCreatingRoom ? 'Creating...' : 'Create Multiplayer Room'}
+        </button>
 
         {/* Always show uploader */}
         <Uploader />

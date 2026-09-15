@@ -15,8 +15,20 @@ export async function GET(request: Request) {
   
   const redirectUri = `${protocol}://${host}/api/strava/callback`;
 
+  const returnTo = url.searchParams.get('returnTo') || '/test-strava';
+  
   const scope = 'activity:read_all';
   const stravaLoginUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=${scope}`;
 
-  return NextResponse.redirect(stravaLoginUrl);
+  const response = NextResponse.redirect(stravaLoginUrl);
+  
+  // Set a secure HTTP-only cookie to remember where to return the user
+  response.cookies.set('strava_return_to', returnTo, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 15, // 15 minutes
+  });
+
+  return response;
 }

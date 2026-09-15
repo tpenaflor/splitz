@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -47,9 +48,20 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL('/test-strava?error=token_exchange_failed', baseUrl));
     }
 
-    // For the MVP test, we will redirect back to the test page with the access token in the hash.
-    // In a real app, you would securely store this in a session cookie or your database.
-    return NextResponse.redirect(new URL(`/test-strava#access_token=${data.access_token}`, baseUrl));
+    // Read the returnTo cookie to figure out where to redirect the user
+    const cookieStore = await cookies();
+    const returnToPath = cookieStore.get('strava_return_to')?.value || '/test-strava';
+    
+    // Check if returnToPath already has a hash or query params and append accordingly
+    const hashPrefix = returnToPath.includes('#') ? '&' : '#';
+    const finalRedirectUrl = new URL(`${returnToPath}${hashPrefix}access_token=${data.access_token}`, baseUrl);
+    
+    const response = NextResponse.redirect(finalRedirectUrl);
+    
+    // Clear the cookie
+    response.cookies.delete('strava_return_to');
+    
+    return response;
 
   } catch (err) {
     console.error('Error during Strava callback:', err);
