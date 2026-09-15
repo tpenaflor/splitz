@@ -74,7 +74,7 @@ export default function Sidebar() {
           className="w-full flex items-center justify-center gap-2 mb-4 py-2 px-4 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-medium rounded-lg shadow-sm transition-all disabled:opacity-50"
         >
           <Users className="w-4 h-4" />
-          {isCreatingRoom ? 'Creating...' : 'Create Multiplayer Room'}
+          {isCreatingRoom ? 'Creating...' : 'Create Activity Group'}
         </button>
 
         {/* Always show uploader */}

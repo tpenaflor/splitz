@@ -5,7 +5,7 @@ import { Upload } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { parseGPX, parseFIT } from '../lib/parser';
 
-export default function Uploader() {
+export default function Uploader({ onActivityParsed }: { onActivityParsed?: (data: any) => void }) {
   const [isDragging, setIsDragging] = useState(false);
   const { addActivity } = useAppStore();
 
@@ -41,7 +41,11 @@ export default function Uploader() {
         }
 
         if (data) {
-          addActivity(data);
+          if (onActivityParsed) {
+            onActivityParsed(data);
+          } else {
+            addActivity(data);
+          }
         }
       }
     }

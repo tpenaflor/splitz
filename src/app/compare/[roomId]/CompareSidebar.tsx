@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { Users, Link as LinkIcon, Activity as ActivityIcon, Loader2, X, CheckCircle2 } from 'lucide-react';
+import { Users, Link as LinkIcon, Activity as ActivityIcon, Loader2, X, CheckCircle2, Trash2 } from 'lucide-react';
 import Uploader from '@/components/Uploader';
 
 export default function CompareSidebar({ roomId }: { roomId: string }) {
@@ -14,6 +14,9 @@ export default function CompareSidebar({ roomId }: { roomId: string }) {
   const [loadingStrava, setLoadingStrava] = useState(false);
   const [uploadingActivity, setUploadingActivity] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const [pendingActivityData, setPendingActivityData] = useState<any | null>(null);
+  const [renameInput, setRenameInput] = useState('');
 
   useEffect(() => {
     setShareLink(window.location.href);
@@ -34,14 +37,12 @@ export default function CompareSidebar({ roomId }: { roomId: string }) {
 
   useEffect(() => {
     participants.forEach(async (p) => {
-      // Convert id to string for comparison since Strava IDs can be huge numbers
       const pId = p.id.toString();
       if (!activities.find(a => a.id.toString() === pId)) {
         try {
           const res = await fetch(p.dataUrl);
           if (res.ok) {
             const activityData = await res.json();
-            // Ensure ID is string
             activityData.id = activityData.id.toString();
             addActivity(activityData);
           }
@@ -82,19 +83,51 @@ export default function CompareSidebar({ roomId }: { roomId: string }) {
       const res = await fetch(`/api/strava/streams?activityId=${strId}&token=${token}&startTime=${startTimeSec}&name=${encodeURIComponent(stravaAct.name)}`);
       if (!res.ok) throw new Error("Failed to fetch streams");
       const { activityData } = await res.json();
+      
+      setPendingActivityData(activityData);
+      setRenameInput(activityData.name);
+    } catch (e) {
+      alert("Error fetching activity data. Does it have GPS data?");
+    } finally {
+      setUploadingActivity(null);
+    }
+  };
 
+  const handleUploaderData = (data: any) => {
+    setPendingActivityData(data);
+    setRenameInput(data.name);
+  };
+
+  const confirmUpload = async () => {
+    if (!pendingActivityData) return;
+    setUploadingActivity('confirm');
+    try {
+      const dataToUpload = { ...pendingActivityData, name: renameInput || 'Unnamed Activity' };
       await fetch(`/api/rooms/${roomId}/participants`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ activityData })
+        body: JSON.stringify({ activityData: dataToUpload })
       });
 
       setStravaActivities([]);
       setToken(null);
+      setPendingActivityData(null);
+      addActivity(dataToUpload);
     } catch (e) {
-      alert("Error adding activity to room. Does it have GPS data?");
+      alert("Error adding activity to group.");
     } finally {
       setUploadingActivity(null);
+    }
+  };
+
+  const handleDeleteParticipant = async (participantId: string) => {
+    if (!confirm('Remove this activity from the group?')) return;
+    try {
+      await fetch(`/api/rooms/${roomId}/participants/${participantId}`, { method: 'DELETE' });
+      setParticipants(p => p.filter(x => x.id.toString() !== participantId.toString()));
+      removeActivity(participantId);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -109,11 +142,11 @@ export default function CompareSidebar({ roomId }: { roomId: string }) {
       <div className="p-4 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-6 h-6 text-purple-500" />
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Multiplayer Room</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Activity Group</h1>
         </div>
 
         <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-100 dark:border-purple-800 mb-6">
-          <p className="text-xs text-purple-800 dark:text-purple-300 mb-2 font-medium">Invite friends to join this room:</p>
+          <p className="text-xs text-purple-800 dark:text-purple-300 mb-2 font-medium">Invite friends to join this group:</p>
           <div className="flex items-center gap-2">
             <input 
               readOnly 
@@ -129,7 +162,34 @@ export default function CompareSidebar({ roomId }: { roomId: string }) {
           </div>
         </div>
 
-        {stravaActivities.length > 0 ? (
+        {pendingActivityData ? (
+          <div className="mb-6 p-4 border border-purple-200 dark:border-purple-800 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+            <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Rename & Upload</h2>
+            <input 
+              type="text" 
+              value={renameInput}
+              onChange={(e) => setRenameInput(e.target.value)}
+              className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm mb-4 focus:ring-2 focus:ring-purple-500 outline-none"
+              placeholder="Activity Name"
+            />
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setPendingActivityData(null)}
+                className="flex-1 py-2 rounded-lg text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmUpload}
+                disabled={uploadingActivity === 'confirm'}
+                className="flex-1 py-2 rounded-lg text-white bg-purple-600 hover:bg-purple-700 text-sm font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {uploadingActivity === 'confirm' && <Loader2 className="w-4 h-4 animate-spin" />}
+                Upload
+              </button>
+            </div>
+          </div>
+        ) : stravaActivities.length > 0 ? (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300">Select Activity to Share</h2>
@@ -175,7 +235,7 @@ export default function CompareSidebar({ roomId }: { roomId: string }) {
               <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
             </div>
             
-            <Uploader />
+            <Uploader onActivityParsed={handleUploaderData} />
           </div>
         )}
       </div>
@@ -195,12 +255,21 @@ export default function CompareSidebar({ roomId }: { roomId: string }) {
           {participants.map((p, idx) => {
             const isLoadedLocally = activities.find(a => a.id.toString() === p.id.toString());
             return (
-              <div key={p.id || idx} className="bg-white dark:bg-gray-800 rounded-lg p-3 relative border-l-4 border flex items-center justify-between shadow-sm" style={{ borderColor: p.color || '#ccc' }}>
-                <div className="truncate pr-2">
+              <div key={p.id || idx} className="bg-white dark:bg-gray-800 rounded-lg p-3 relative border-l-4 border flex items-center justify-between shadow-sm group" style={{ borderColor: p.color || '#ccc' }}>
+                <div className="truncate pr-2 flex-1">
                   <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate">{p.name || 'Anonymous Activity'}</h3>
                   <p className="text-xs text-gray-500">{isLoadedLocally ? 'Synced' : 'Downloading...'}</p>
                 </div>
-                {!isLoadedLocally && <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />}
+                <div className="flex items-center gap-2">
+                  {!isLoadedLocally && <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />}
+                  <button 
+                    onClick={() => handleDeleteParticipant(p.id.toString())}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-500 rounded"
+                    title="Remove from group"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             );
           })}
