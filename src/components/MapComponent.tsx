@@ -8,7 +8,7 @@ import { interpolatePosition } from '../lib/utils';
 
 export default function MapComponent() {
   const mapRef = useRef<MapRef>(null);
-  const { activities, currentTime, appMode, segmentResults, activeSegmentId, detectedSegments, segmentRange, minTime, maxTime, eventPrivacyMinTime, eventPrivacyMaxTime, theme } = useAppStore();
+  const { activities, currentTime, appMode, segmentResults, activeSegmentId, detectedSegments, segmentRange, minTime, maxTime, eventPrivacyMinTime, eventPrivacyMaxTime, theme, privacyMode } = useAppStore();
 
   useEffect(() => {
     if (activities.length > 0 && mapRef.current) {
@@ -74,13 +74,17 @@ export default function MapComponent() {
       const ref = activities[0];
       let startPos = ref.positions[0];
       let endPos = ref.positions[ref.positions.length - 1];
-      if (minTime !== null && maxTime !== null) {
-        const sIdx = ref.positions.findIndex(p => p.time >= minTime);
+      
+      const pMin = privacyMode && eventPrivacyMinTime !== null ? eventPrivacyMinTime : minTime;
+      const pMax = privacyMode && eventPrivacyMaxTime !== null ? eventPrivacyMaxTime : maxTime;
+
+      if (pMin !== null && pMax !== null) {
+        const sIdx = ref.positions.findIndex(p => p.time >= pMin);
         if (sIdx !== -1) startPos = ref.positions[sIdx];
         
         let eIdx = -1;
         for (let i = ref.positions.length - 1; i >= 0; i--) {
-          if (ref.positions[i].time <= maxTime) {
+          if (ref.positions[i].time <= pMax) {
             eIdx = i;
             break;
           }
@@ -99,7 +103,7 @@ export default function MapComponent() {
         end: ref.positions[segmentRange[1]]
       };
     }
-  }, [appMode, activities, activeSegmentId, segmentRange]);
+  }, [appMode, activities, activeSegmentId, segmentRange, minTime, maxTime, eventPrivacyMinTime, eventPrivacyMaxTime, privacyMode]);
 
   const currentPositions = useMemo(() => {
     if (currentTime === null) return [];

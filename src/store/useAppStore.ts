@@ -175,6 +175,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setPlaybackSpeed: (speed) => set({ playbackSpeed: speed }),
   setAppMode: (mode) => set((state) => {
+    if (state.appMode === mode) return {};
     if (mode === 'event') {
       const { maxTime } = computeEventBounds(state.activities);
       const privacyBounds = computePrivacyBounds(state.activities, state.privacyMode);
