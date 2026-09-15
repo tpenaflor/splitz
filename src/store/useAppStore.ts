@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { DetectedSegment, ActivitySegmentResult, detectCommonSegments, computeSegmentResults, computeEventBounds } from '../lib/segmentDetection';
+import { DetectedSegment, ActivitySegmentResult, detectCommonSegments, computeSegmentResults, computeEventBounds, computePrivacyBounds } from '../lib/segmentDetection';
 
 export type Position = {
   time: number; // Unix timestamp in seconds
@@ -27,6 +27,8 @@ interface AppState {
   currentTime: number | null;
   minTime: number | null;
   maxTime: number | null;
+  eventPrivacyMinTime: number | null;
+  eventPrivacyMaxTime: number | null;
   isPlaying: boolean;
   playbackSpeed: number; // multiplier, e.g., 10x real time
   
@@ -63,6 +65,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   currentTime: null,
   minTime: null,
   maxTime: null,
+  eventPrivacyMinTime: null,
+  eventPrivacyMaxTime: null,
   isPlaying: false,
   playbackSpeed: 10,
   
@@ -110,10 +114,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
 
     const { minTime, maxTime } = computeEventBounds(newActivities);
+    const privacyBounds = computePrivacyBounds(newActivities, state.privacyMode);
     return {
       activities: newActivities,
       minTime,
       maxTime,
+      eventPrivacyMinTime: privacyBounds.minTime,
+      eventPrivacyMaxTime: privacyBounds.maxTime,
       currentTime: (state.currentTime === null || (minTime !== null && state.currentTime < minTime)) ? minTime : state.currentTime,
       detectedSegments: newDetectedSegments
     };
@@ -122,7 +129,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   removeActivity: (id) => set((state) => {
     const newActivities = state.activities.filter(a => a.id !== id);
     if (newActivities.length === 0) {
-      return { activities: [], minTime: null, maxTime: null, currentTime: null, isPlaying: false, detectedSegments: [], activeSegmentId: null, segmentResults: [], baseSegmentResults: [] };
+      return { activities: [], minTime: null, maxTime: null, eventPrivacyMinTime: null, eventPrivacyMaxTime: null, currentTime: null, isPlaying: false, detectedSegments: [], activeSegmentId: null, segmentResults: [], baseSegmentResults: [] };
     }
     const newDetectedSegments = detectCommonSegments(newActivities);
     
@@ -147,10 +154,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
 
     const { minTime, maxTime } = computeEventBounds(newActivities);
+    const privacyBounds = computePrivacyBounds(newActivities, state.privacyMode);
     return {
       activities: newActivities,
       minTime,
       maxTime,
+      eventPrivacyMinTime: privacyBounds.minTime,
+      eventPrivacyMaxTime: privacyBounds.maxTime,
       currentTime: (state.currentTime !== null && maxTime !== null && state.currentTime > maxTime) ? maxTime : state.currentTime,
       detectedSegments: newDetectedSegments,
       activeSegmentId: null,
@@ -165,7 +175,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   setAppMode: (mode) => set((state) => {
     if (mode === 'event') {
       const { minTime, maxTime } = computeEventBounds(state.activities);
-      return { appMode: mode, minTime, maxTime, currentTime: minTime, activeSegmentId: null, segmentResults: [], baseSegmentResults: [], segmentRange: null };
+      const privacyBounds = computePrivacyBounds(state.activities, state.privacyMode);
+      return { appMode: mode, minTime, maxTime, eventPrivacyMinTime: privacyBounds.minTime, eventPrivacyMaxTime: privacyBounds.maxTime, currentTime: minTime, activeSegmentId: null, segmentResults: [], baseSegmentResults: [], segmentRange: null };
     } else if (mode === 'segment') {
       const results = state.activities.map(a => ({
         activityId: a.id,
@@ -210,6 +221,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         };
       } else {
         const { minTime, maxTime } = computeEventBounds(state.activities);
+        const privacyBounds = computePrivacyBounds(state.activities, state.privacyMode);
         return { 
           activeSegmentId: null, 
           segmentResults: [], 
@@ -217,6 +229,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           segmentRange: null, 
           minTime, 
           maxTime, 
+          eventPrivacyMinTime: privacyBounds.minTime,
+          eventPrivacyMaxTime: privacyBounds.maxTime,
           currentTime: minTime, 
           isPlaying: false 
         };
@@ -311,11 +325,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   setPrivacyMode: (val) => set((state) => {
     const updates: Partial<AppState> = { privacyMode: val };
     if (state.appMode === 'event') {
-      const { minTime, maxTime } = computeEventBounds(state.activities);
-      updates.minTime = minTime;
-      updates.maxTime = maxTime;
-      if (state.currentTime && minTime && state.currentTime < minTime) updates.currentTime = minTime;
-      if (state.currentTime && maxTime && state.currentTime > maxTime) updates.currentTime = maxTime;
+      const privacyBounds = computePrivacyBounds(state.activities, val);
+      updates.eventPrivacyMinTime = privacyBounds.minTime;
+      updates.eventPrivacyMaxTime = privacyBounds.maxTime;
     }
     return updates;
   }),

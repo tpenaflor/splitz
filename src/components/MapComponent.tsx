@@ -8,7 +8,7 @@ import { interpolatePosition } from '../lib/utils';
 
 export default function MapComponent() {
   const mapRef = useRef<MapRef>(null);
-  const { activities, currentTime, appMode, segmentResults, activeSegmentId, detectedSegments, segmentRange, minTime, maxTime, theme } = useAppStore();
+  const { activities, currentTime, appMode, segmentResults, activeSegmentId, detectedSegments, segmentRange, minTime, maxTime, eventPrivacyMinTime, eventPrivacyMaxTime, theme } = useAppStore();
 
   useEffect(() => {
     if (activities.length > 0 && mapRef.current) {
@@ -201,8 +201,8 @@ export default function MapComponent() {
       >
         {/* Event Mode: Draw full paths */}
         {appMode === 'event' && activities.map((activity) => {
-          const filteredPositions = (minTime !== null && maxTime !== null) 
-            ? activity.positions.filter(p => p.time >= minTime && p.time <= maxTime)
+          const filteredPositions = (eventPrivacyMinTime !== null && eventPrivacyMaxTime !== null) 
+            ? activity.positions.filter(p => p.time >= eventPrivacyMinTime && p.time <= eventPrivacyMaxTime)
             : activity.positions;
             
           const geojson = {
