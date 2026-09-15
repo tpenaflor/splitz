@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server';
 import { firestore, storage } from '@/lib/db';
 
 function computeBounds(positions: any[]) {
-  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+  let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
   for (const p of positions) {
     if (p.lat < minLat) minLat = p.lat;
     if (p.lat > maxLat) maxLat = p.lat;
-    if (p.lng < minLng) minLng = p.lng;
-    if (p.lng > maxLng) maxLng = p.lng;
+    if (p.lon < minLon) minLon = p.lon;
+    if (p.lon > maxLon) maxLon = p.lon;
   }
-  return { minLat, maxLat, minLng, maxLng };
+  return { minLat, maxLat, minLon, maxLon };
 }
 
 
@@ -39,8 +39,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ roo
       return NextResponse.json({ error: 'Activity has no GPS data' }, { status: 400 });
     }
 
-    const { minLat, maxLat, minLng, maxLng } = computeBounds(positions);
-    const bounds = { minLat, maxLat, minLng, maxLng, startTime: activityData.startTime, endTime: activityData.endTime };
+    const { minLat, maxLat, minLon, maxLon } = computeBounds(positions);
+    const bounds = { minLat, maxLat, minLon, maxLon, startTime: activityData.startTime, endTime: activityData.endTime };
     const roomData = roomDoc.data();
 
     if (!roomData?.baseActivityData) {
@@ -52,8 +52,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ roo
       const intersects = (
         minLat <= base.maxLat + BUFFER &&
         maxLat >= base.minLat - BUFFER &&
-        minLng <= base.maxLng + BUFFER &&
-        maxLng >= base.minLng - BUFFER
+        minLon <= base.maxLon + BUFFER &&
+        maxLon >= base.minLon - BUFFER
       );
 
       if (!intersects) {

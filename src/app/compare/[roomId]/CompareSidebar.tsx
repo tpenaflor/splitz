@@ -20,6 +20,7 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
   const [loadingStrava, setLoadingStrava] = useState(false);
   const [uploadingActivity, setUploadingActivity] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [pendingActivityData, setPendingActivityData] = useState<any | null>(null);
   const [renameInput, setRenameInput] = useState('');
@@ -71,14 +72,22 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
     }
   }, []);
 
-  const fetchStravaActivities = async (t: string) => {
+  const fetchStravaActivities = async (t: string, search?: string) => {
     setLoadingStrava(true);
     try {
-      const res = await fetch(`/api/strava/activities?token=${t}`);
+      const queryParam = search ? `&search=${encodeURIComponent(search)}` : '';
+      const res = await fetch(`/api/strava/activities?token=${t}${queryParam}`);
       const data = await res.json();
       setStravaActivities(data.activities || []);
     } catch (e) {}
     setLoadingStrava(false);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (token) {
+      fetchStravaActivities(token, searchQuery);
+    }
   };
 
   const handleSelectStravaActivity = async (stravaAct: any) => {
@@ -208,27 +217,53 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
               </button>
             </div>
           </div>
-        ) : stravaActivities.length > 0 ? (
+        ) : token ? (
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300">Select Activity to Share</h2>
-              <button onClick={() => setStravaActivities([])} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+              <button onClick={() => { setStravaActivities([]); setToken(null); setSearchQuery(''); }} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
             </div>
+            
+            <form onSubmit={handleSearch} className="mb-3 flex gap-2">
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or ID..."
+                className="flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-gray-900 dark:text-white"
+              />
+              <button 
+                type="submit" 
+                className="px-3 py-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded text-sm font-medium hover:bg-orange-200 dark:hover:bg-orange-800/50 transition-colors flex items-center justify-center min-w-[60px]"
+                disabled={loadingStrava}
+              >
+                {loadingStrava ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
+              </button>
+            </form>
+
             <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-              {stravaActivities.map(act => (
-                <button 
-                  key={act.id}
-                  disabled={uploadingActivity === act.id.toString()}
-                  onClick={() => handleSelectStravaActivity(act)}
-                  className="w-full text-left p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-orange-400 dark:hover:border-orange-500 bg-gray-50 dark:bg-gray-800 transition-colors flex justify-between items-center disabled:opacity-50"
-                >
-                  <div className="truncate pr-2">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{act.name}</p>
-                    <p className="text-xs text-gray-500">{new Date(act.start_date).toLocaleDateString()} • {(act.distance / 1000).toFixed(1)} km</p>
-                  </div>
-                  {uploadingActivity === act.id.toString() && <Loader2 className="w-4 h-4 text-orange-500 animate-spin" />}
-                </button>
-              ))}
+              {loadingStrava && stravaActivities.length === 0 ? (
+                <div className="flex items-center justify-center p-4">
+                  <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
+                </div>
+              ) : stravaActivities.length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No activities found.</p>
+              ) : (
+                stravaActivities.map(act => (
+                  <button 
+                    key={act.id}
+                    disabled={uploadingActivity === act.id.toString()}
+                    onClick={() => handleSelectStravaActivity(act)}
+                    className="w-full text-left p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-orange-400 dark:hover:border-orange-500 bg-gray-50 dark:bg-gray-800 transition-colors flex justify-between items-center disabled:opacity-50"
+                  >
+                    <div className="truncate pr-2">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{act.name}</p>
+                      <p className="text-xs text-gray-500">{new Date(act.start_date).toLocaleDateString()} • {(act.distance / 1000).toFixed(1)} km</p>
+                    </div>
+                    {uploadingActivity === act.id.toString() && <Loader2 className="w-4 h-4 text-orange-500 animate-spin" />}
+                  </button>
+                ))
+              )}
             </div>
           </div>
         ) : (
