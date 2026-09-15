@@ -8,6 +8,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ roo
   const { roomId } = await params;
   
   try {
+    const roomRef = firestore.collection('rooms').doc(roomId);
+    const roomDoc = await roomRef.get();
+    
+    if (!roomDoc.exists) {
+      return NextResponse.json({ error: 'Activity Group not found' }, { status: 404 });
+    }
+
     const body = await request.json();
     const { activityData } = body;
 
@@ -48,7 +55,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ room
   const { roomId } = await params;
   
   try {
-    const snapshot = await firestore.collection('rooms').doc(roomId).collection('participants').get();
+    const roomRef = firestore.collection('rooms').doc(roomId);
+    const roomDoc = await roomRef.get();
+    
+    if (!roomDoc.exists) {
+      return NextResponse.json({ error: 'Activity Group not found' }, { status: 404 });
+    }
+
+    const snapshot = await roomRef.collection('participants').get();
     
     if (snapshot.empty) {
       return NextResponse.json({ participants: [] });
