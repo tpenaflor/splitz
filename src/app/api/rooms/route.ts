@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server';
 import { firestore } from '@/lib/db';
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    const body = await request.json().catch(() => ({}));
+    const mode = body.mode || 'event';
+
     // Generate a readable room ID like: "fast-blue-cheetah"
     const readableId = uniqueNamesGenerator({
       dictionaries: [adjectives, colors, animals],
@@ -14,6 +17,7 @@ export async function POST() {
     const roomRef = firestore.collection('rooms').doc(readableId);
     await roomRef.set({
       createdAt: new Date().toISOString(),
+      mode: mode
     });
 
     return NextResponse.json({ roomId: readableId });

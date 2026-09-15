@@ -1,6 +1,18 @@
 import { NextResponse } from 'next/server';
 import { firestore, storage } from '@/lib/db';
 
+function computeBounds(positions: any[]) {
+  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+  for (const p of positions) {
+    if (p.lat < minLat) minLat = p.lat;
+    if (p.lat > maxLat) maxLat = p.lat;
+    if (p.lng < minLng) minLng = p.lng;
+    if (p.lng > maxLng) maxLng = p.lng;
+  }
+  return { minLat, maxLat, minLng, maxLng };
+}
+
+
 // Fallback to the known bucket name if env var is missing during local dev
 const BUCKET_NAME = process.env.FIT_FILES_BUCKET || 'splitz-multiplayer-files-508621';
 
@@ -20,6 +32,40 @@ export async function POST(request: Request, { params }: { params: Promise<{ roo
 
     if (!activityData || !activityData.id) {
       return NextResponse.json({ error: 'Missing activityData' }, { status: 400 });
+    }
+
+    const positions = activityData.positions || [];
+    if (positions.length === 0) {
+      return NextResponse.json({ error: 'Activity has no GPS data' }, { status: 400 });
+    }
+
+    const { minLat, maxLat, minLng, maxLng } = computeBounds(positions);
+    const bounds = { minLat, maxLat, minLng, maxLng, startTime: activityData.startTime, endTime: activityData.endTime };
+    const roomData = roomDoc.data();
+
+    if (!roomData?.baseActivityData) {
+      await roomRef.update({ baseActivityData: bounds, baseActivityId: activityData.id });
+    } else {
+      const base = roomData.baseActivityData;
+      const BUFFER = 0.005; // ~500m
+
+      const intersects = (
+        minLat <= base.maxLat + BUFFER &&
+        maxLat >= base.minLat - BUFFER &&
+        minLng <= base.maxLng + BUFFER &&
+        maxLng >= base.minLng - BUFFER
+      );
+
+      if (!intersects) {
+        return NextResponse.json({ error: "Activity does not overlap spatially with the group's route." }, { status: 400 });
+      }
+
+      if (roomData.mode === 'event') {
+        const timeIntersects = Math.max(activityData.startTime, base.startTime) <= Math.min(activityData.endTime, base.endTime);
+        if (!timeIntersects) {
+          return NextResponse.json({ error: "Activity must overlap in time for Event mode." }, { status: 400 });
+        }
+      }
     }
 
     const participantId = activityData.id;

@@ -109,18 +109,23 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
     setUploadingActivity('confirm');
     try {
       const dataToUpload = { ...pendingActivityData, name: renameInput || 'Unnamed Activity' };
-      await fetch(`/api/rooms/${roomId}/participants`, {
+      const res = await fetch(`/api/rooms/${roomId}/participants`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ activityData: dataToUpload })
       });
 
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to upload activity');
+      }
+
       setStravaActivities([]);
       setToken(null);
       setPendingActivityData(null);
       addActivity(dataToUpload);
-    } catch (e) {
-      alert("Error adding activity to group.");
+    } catch (e: any) {
+      alert(e.message || "Error adding activity to group.");
     } finally {
       setUploadingActivity(null);
     }

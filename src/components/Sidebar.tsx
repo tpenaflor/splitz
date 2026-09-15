@@ -27,11 +27,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const router = useRouter();
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [createMode, setCreateMode] = useState<'event' | 'segment'>('event');
 
   const handleCreateRoom = async () => {
     try {
       setIsCreatingRoom(true);
-      const res = await fetch('/api/rooms', { method: 'POST' });
+      const res = await fetch('/api/rooms', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: createMode })
+      });
       if (!res.ok) throw new Error('Failed to create room');
       const data = await res.json();
       router.push(`/compare/${data.roomId}`);
@@ -81,14 +86,24 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </button>
         </div>
 
-        <button 
-          onClick={handleCreateRoom}
-          disabled={isCreatingRoom}
-          className="w-full flex items-center justify-center gap-2 mb-4 py-2 px-4 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-medium rounded-lg shadow-sm transition-all disabled:opacity-50"
-        >
-          <Users className="w-4 h-4" />
-          {isCreatingRoom ? 'Creating...' : 'Create Activity Group'}
-        </button>
+        <div className="flex gap-2 mb-4">
+          <select 
+            value={createMode}
+            onChange={(e) => setCreateMode(e.target.value as 'event' | 'segment')}
+            className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:border-purple-500"
+          >
+            <option value="event">Event (Time & GPS)</option>
+            <option value="segment">Segment (GPS only)</option>
+          </select>
+          <button 
+            onClick={handleCreateRoom}
+            disabled={isCreatingRoom}
+            className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-medium rounded-lg shadow-sm transition-all disabled:opacity-50"
+          >
+            <Users className="w-4 h-4" />
+            {isCreatingRoom ? 'Creating...' : 'Create Group'}
+          </button>
+        </div>
 
         {/* Always show uploader */}
         <Uploader />
