@@ -446,25 +446,25 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
                         <span className="text-xs text-gray-500 w-8">Start</span>
                         <input 
                           type="range" 
-                          min={0} 
-                          max={100} 
-                          value={(segmentRange?.[0] ?? 0)}
-                          onChange={(e) => setSegmentRange([Number(e.target.value), (segmentRange?.[1] ?? 100)])}
+                          min={seg.startIndex} 
+                          max={seg.endIndex} 
+                          value={(segmentRange?.[0] ?? seg.startIndex)}
+                          onChange={(e) => setSegmentRange([Number(e.target.value), (segmentRange?.[1] ?? seg.endIndex)])}
                           className="flex-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-lg appearance-none accent-purple-500"
                         />
-                        <span className="text-xs text-gray-500 w-8 text-right">{(segmentRange?.[0] ?? 0)}%</span>
+                        <span className="text-xs text-gray-500 w-8 text-right">{Math.round((((segmentRange?.[0] ?? seg.startIndex) - seg.startIndex) / Math.max(1, seg.endIndex - seg.startIndex)) * 100)}%</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-gray-500 w-8">End</span>
                         <input 
                           type="range" 
-                          min={0} 
-                          max={100} 
-                          value={(segmentRange?.[1] ?? 100)}
-                          onChange={(e) => setSegmentRange([(segmentRange?.[0] ?? 0), Number(e.target.value)])}
+                          min={seg.startIndex} 
+                          max={seg.endIndex} 
+                          value={(segmentRange?.[1] ?? seg.endIndex)}
+                          onChange={(e) => setSegmentRange([(segmentRange?.[0] ?? seg.startIndex), Number(e.target.value)])}
                           className="flex-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-lg appearance-none accent-purple-500"
                         />
-                        <span className="text-xs text-gray-500 w-8 text-right">{(segmentRange?.[1] ?? 100)}%</span>
+                        <span className="text-xs text-gray-500 w-8 text-right">{Math.round((((segmentRange?.[1] ?? seg.endIndex) - seg.startIndex) / Math.max(1, seg.endIndex - seg.startIndex)) * 100)}%</span>
                       </div>
                     </div>
                   )}

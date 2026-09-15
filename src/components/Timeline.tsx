@@ -28,7 +28,7 @@ export default function Timeline() {
 
   const animate = (time: number) => {
     if (lastUpdateRef.current !== undefined) {
-      const deltaMs = time - lastUpdateRef.current;
+      const deltaMs = Math.min(time - lastUpdateRef.current, 100); // Clamp to 100ms
       const deltaSec = deltaMs / 1000;
       
       const store = useAppStore.getState();
