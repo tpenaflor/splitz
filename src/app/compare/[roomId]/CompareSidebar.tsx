@@ -1,9 +1,29 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, ReactNode } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { Users, Link as LinkIcon, Activity as ActivityIcon, Loader2, X, CheckCircle2, Trash2, Info, Route } from 'lucide-react';
+import { Users, Link as LinkIcon, Activity as ActivityIcon, Loader2, X, CheckCircle2, Trash2, Info, Route, ChevronDown, ChevronRight } from 'lucide-react';
 import Uploader from '@/components/Uploader';
+
+function CollapsibleSection({ title, defaultOpen = false, children, extraCount }: { title: string, defaultOpen?: boolean, children: ReactNode, extraCount?: number }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="flex flex-col gap-2">
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="flex items-center justify-between w-full hover:opacity-80 transition-opacity"
+      >
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            {title} {extraCount !== undefined ? `(${extraCount})` : ''}
+          </h2>
+        </div>
+        {isOpen ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
+      </button>
+      {isOpen && <div>{children}</div>}
+    </div>
+  );
+}
 
 function formatDuration(sec: number) {
   const m = Math.floor(sec / 60);
@@ -215,23 +235,26 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
-        <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-100 dark:border-purple-800">
-          <p className="text-xs text-purple-800 dark:text-purple-300 mb-2 font-medium">Invite friends to join this group:</p>
-          <div className="flex items-center gap-2">
-            <input 
-              readOnly 
-              value={shareLink}
-              className="flex-1 bg-white dark:bg-gray-800 text-xs p-2 rounded border border-purple-200 dark:border-purple-700 text-gray-600 dark:text-gray-300 focus:outline-none"
-            />
-            <button 
-              onClick={copyToClipboard}
-              className="p-2 bg-purple-100 hover:bg-purple-200 dark:bg-purple-800 dark:hover:bg-purple-700 rounded text-purple-700 dark:text-purple-200 transition-colors"
-            >
-              {copied ? <CheckCircle2 className="w-4 h-4" /> : <LinkIcon className="w-4 h-4" />}
-            </button>
+        <CollapsibleSection title="Invite Friends" defaultOpen={participants.length === 0}>
+          <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-100 dark:border-purple-800">
+            <p className="text-xs text-purple-800 dark:text-purple-300 mb-2 font-medium">Invite friends to join this group:</p>
+            <div className="flex items-center gap-2">
+              <input 
+                readOnly 
+                value={shareLink}
+                className="flex-1 bg-white dark:bg-gray-800 text-xs p-2 rounded border border-purple-200 dark:border-purple-700 text-gray-600 dark:text-gray-300 focus:outline-none"
+              />
+              <button 
+                onClick={copyToClipboard}
+                className="p-2 bg-purple-100 hover:bg-purple-200 dark:bg-purple-800 dark:hover:bg-purple-700 rounded text-purple-700 dark:text-purple-200 transition-colors"
+              >
+                {copied ? <CheckCircle2 className="w-4 h-4" /> : <LinkIcon className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
-        </div>
+        </CollapsibleSection>
 
+        <CollapsibleSection title="Add Activity" defaultOpen={activities.length === 0}>
         {pendingActivityData ? (
           <div className="p-4 border border-purple-200 dark:border-purple-800 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
             <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Rename & Upload</h2>
@@ -357,13 +380,9 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
             <Uploader onActivityParsed={handleUploaderData} />
           </div>
         )}
-      </div>
-      
-      <div className="flex-1 overflow-y-auto p-4">
-        <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-          Participants ({participants.length})
-        </h2>
-        
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Participants" defaultOpen={true} extraCount={participants.length}>
         {participants.length === 0 && (
           <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
             Waiting for others to join...
@@ -393,12 +412,10 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
             );
           })}
         </div>
-
-        <div className="border-t border-gray-200 dark:border-gray-800" />
+        </CollapsibleSection>
 
         {roomMode === 'segment' && (
-          <div className="flex flex-col gap-3">
-            <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Detected Shared Routes</h2>
+          <CollapsibleSection title="Detected Shared Routes" defaultOpen={true}>
             {detectedSegments.length === 0 ? (
               <div className="text-gray-500 text-sm">Upload at least two overlapping routes to detect segments.</div>
             ) : (
@@ -496,7 +513,7 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
             </div>
           ))
         )}
-        </div>
+        </CollapsibleSection>
         )}
       </div>
     </div>
