@@ -394,10 +394,12 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
 
         <div className="border-t border-gray-200 dark:border-gray-800 my-4" />
 
-        <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Detected Shared Routes</h2>
-        {detectedSegments.length === 0 ? (
-          <div className="text-gray-500 text-sm">Upload at least two overlapping routes to detect segments.</div>
-        ) : (
+        {roomMode === 'segment' && (
+          <>
+            <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Detected Shared Routes</h2>
+            {detectedSegments.length === 0 ? (
+              <div className="text-gray-500 text-sm">Upload at least two overlapping routes to detect segments.</div>
+            ) : (
           detectedSegments.map((seg, idx) => (
             <div key={seg.id} className={`bg-white dark:bg-gray-800 rounded-lg p-4 border transition-colors ${activeSegmentId === seg.id ? 'border-purple-500' : 'border-gray-200 dark:border-gray-700 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 shadow-sm'}`}>
               {activeSegmentId !== seg.id ? (
@@ -491,6 +493,8 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
               )}
             </div>
           ))
+        )}
+        </>
         )}
       </div>
     </div>
