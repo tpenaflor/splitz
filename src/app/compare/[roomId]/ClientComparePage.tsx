@@ -24,7 +24,7 @@ export default function ClientComparePage({ roomId }: { roomId: string }) {
   }, [theme]);
 
   return (
-    <main className="flex h-screen w-full bg-white dark:bg-black text-gray-900 dark:text-white overflow-hidden transition-colors duration-200">
+    <main className="flex h-[100dvh] w-full bg-white dark:bg-black text-gray-900 dark:text-white overflow-hidden transition-colors duration-200">
       <SettingsModal />
       <div className="flex-1 flex flex-col relative">
         <div className="flex-1 relative">

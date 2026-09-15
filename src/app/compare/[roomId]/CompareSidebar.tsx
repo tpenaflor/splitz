@@ -190,8 +190,8 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
   };
 
   return (
-    <div className={`fixed inset-y-0 right-0 z-50 w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col h-full overflow-hidden transition-transform duration-300 ease-in-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} md:relative md:translate-x-0 md:w-96`}>
-      <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+    <div className={`fixed inset-y-0 right-0 z-50 w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 flex flex-col h-[100dvh] md:h-full overflow-hidden transition-transform duration-300 ease-in-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'} md:relative md:translate-x-0 md:w-96`}>
+      <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Users className="w-6 h-6 text-purple-500" />
@@ -212,8 +212,10 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
             <X className="w-5 h-5" />
           </button>
         </div>
+      </div>
 
-        <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-100 dark:border-purple-800 mb-6">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
+        <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-100 dark:border-purple-800">
           <p className="text-xs text-purple-800 dark:text-purple-300 mb-2 font-medium">Invite friends to join this group:</p>
           <div className="flex items-center gap-2">
             <input 
@@ -231,7 +233,7 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
         </div>
 
         {pendingActivityData ? (
-          <div className="mb-6 p-4 border border-purple-200 dark:border-purple-800 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+          <div className="p-4 border border-purple-200 dark:border-purple-800 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
             <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Rename & Upload</h2>
             <input 
               type="text" 
@@ -281,7 +283,7 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
             </div>
           </div>
         ) : token ? (
-          <div className="mb-6">
+          <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300">Select Activity to Share</h2>
               <button onClick={() => { setStravaActivities([]); setToken(null); setSearchQuery(''); }} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
@@ -330,7 +332,7 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
             </div>
           </div>
         ) : (
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3">
             <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300">Add Your Activity</h2>
             {loadingStrava ? (
               <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -392,10 +394,10 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
           })}
         </div>
 
-        <div className="border-t border-gray-200 dark:border-gray-800 my-4" />
+        <div className="border-t border-gray-200 dark:border-gray-800" />
 
         {roomMode === 'segment' && (
-          <>
+          <div className="flex flex-col gap-3">
             <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Detected Shared Routes</h2>
             {detectedSegments.length === 0 ? (
               <div className="text-gray-500 text-sm">Upload at least two overlapping routes to detect segments.</div>
@@ -494,7 +496,7 @@ export default function CompareSidebar({ roomId, isOpen, onClose }: CompareSideb
             </div>
           ))
         )}
-        </>
+        </div>
         )}
       </div>
     </div>
